@@ -44,7 +44,8 @@ if __name__ == '__main__':
         elif expr[0]=='synth-fun':
             SynFunExpr=expr
     FuncDefine = ['define-fun']+SynFunExpr[1:4] #copy function signature
-    #print(FuncDefine)
+    # print(FuncDefine)
+    function_varables = [l[0] for l in FuncDefine[2]]
     BfsQueue = [[StartSym]] #Top-down
     Productions = {StartSym:[]}
     Type = {StartSym:SynFunExpr[3]} # set starting symbol's return type
@@ -55,9 +56,13 @@ if __name__ == '__main__':
             Productions[StartSym].append(NTName)
         Type[NTName] = NTType
         Productions[NTName] = NonTerm[2]
+    # print(function_varables)
+    # print(Type)
+    # print(Productions)
     Count = 0
     Flag = 0
     TE_set = set()
+    # exit()
     while(len(BfsQueue)!=0):
         Curr = BfsQueue.pop(0)
         TryExtend = Extend(Curr,Productions)
@@ -65,7 +70,7 @@ if __name__ == '__main__':
             FuncDefineStr = translator.toString(FuncDefine,ForceBracket = True) # use Force Bracket = True on function definition. MAGIC CODE. DO NOT MODIFY THE ARGUMENT ForceBracket = True.
             
             # 调用z3前检查生成函数是否包含所有形参使用，目前有bug，无法处理实参形参名字不同的情况，如tutorial.sl
-            TestFlag_checkAllValUsed = False
+            TestFlag_checkAllValUsed = True
             if TestFlag_checkAllValUsed:
                 tmp_set = set()
                 def AllValUsed(root):
@@ -75,13 +80,15 @@ if __name__ == '__main__':
                         elif isinstance(i, (list, tuple)):
                             AllValUsed(i)
                 AllValUsed(Curr)
+                # print(tmp_set)
                 tmp_Flag = 1
-                for i in checker.VarTable.items():
+                for i in function_varables:
                     if not i in tmp_set:
                         tmp_Flag = 0
                         break
                 if not tmp_Flag:
                     continue
+                
                 
             CurrStr = translator.toString(Curr)
             Str = FuncDefineStr[:-1]+' '+ CurrStr+FuncDefineStr[-1] # insert Program just before the last bracket ')'
